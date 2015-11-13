@@ -96,12 +96,12 @@ func (pb *prober) probe(probeType probeType, pod *api.Pod, status api.PodStatus,
 		if err != nil {
 			glog.V(1).Infof("%s probe for %q errored: %v", probeType, ctrName, err)
 			if hasRef {
-				pb.recorder.Eventf(ref, "Unhealthy", "%s probe errored: %v", probeType, err)
+				pb.recorder.Eventf(ref, kubecontainer.ContainerUnhealthy, "%s probe errored: %v", probeType, err)
 			}
 		} else { // result != probe.Success
 			glog.V(1).Infof("%s probe for %q failed (%v): %s", probeType, ctrName, result, output)
 			if hasRef {
-				pb.recorder.Eventf(ref, "Unhealthy", "%s probe failed: %s", probeType, output)
+				pb.recorder.Eventf(ref, kubecontainer.ContainerUnhealthy, "%s probe failed: %s", probeType, output)
 			}
 		}
 		return results.Failure, err
@@ -118,8 +118,8 @@ func (pb *prober) runProbeWithRetries(p *api.Probe, pod *api.Pod, status api.Pod
 	var output string
 	for i := 0; i < retries; i++ {
 		result, output, err = pb.runProbe(p, pod, status, container, containerID)
-		if result == probe.Success {
-			return probe.Success, output, nil
+		if err == nil {
+			return result, output, nil
 		}
 	}
 	return result, output, err

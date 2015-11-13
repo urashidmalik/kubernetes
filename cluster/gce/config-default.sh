@@ -29,7 +29,7 @@ REGISTER_MASTER_KUBELET=${REGISTER_MASTER:-true}
 PREEMPTIBLE_MINION=${PREEMPTIBLE_MINION:-false}
 
 OS_DISTRIBUTION=${KUBE_OS_DISTRIBUTION:-debian}
-MASTER_IMAGE=${KUBE_GCE_MASTER_IMAGE:-container-vm-v20150806}
+MASTER_IMAGE=${KUBE_GCE_MASTER_IMAGE:-container-vm-v20151103}
 MASTER_IMAGE_PROJECT=${KUBE_GCE_MASTER_PROJECT:-google-containers}
 MINION_IMAGE=${KUBE_GCE_MINION_IMAGE:-"${MASTER_IMAGE}"}
 MINION_IMAGE_PROJECT=${KUBE_GCE_MINION_PROJECT:-"${MASTER_IMAGE_PROJECT}"}
@@ -44,8 +44,6 @@ MINION_TAG="${INSTANCE_PREFIX}-minion"
 MASTER_IP_RANGE="${MASTER_IP_RANGE:-10.246.0.0/24}"
 CLUSTER_IP_RANGE="${CLUSTER_IP_RANGE:-10.244.0.0/16}"
 MINION_SCOPES="${MINION_SCOPES:-compute-rw,monitoring,logging-write,storage-ro}"
-RUNTIME_CONFIG="${KUBE_RUNTIME_CONFIG:-}"
-ENABLE_EXPERIMENTAL_API="${KUBE_ENABLE_EXPERIMENTAL_API:-false}"
 
 # Increase the sleep interval value if concerned about API rate limits. 3, in seconds, is the default.
 POLL_SLEEP_INTERVAL="${POLL_SLEEP_INTERVAL:-3}"
@@ -77,6 +75,13 @@ if [[ ${KUBE_ENABLE_INSECURE_REGISTRY:-false} == "true" ]]; then
   EXTRA_DOCKER_OPTS="--insecure-registry 10.0.0.0/8"
 fi
 
+# Optional: customize runtime config
+RUNTIME_CONFIG="${KUBE_RUNTIME_CONFIG:-}"
+
+# Optional: enable v1beta1 related features
+ENABLE_DEPLOYMENTS="${KUBE_ENABLE_DEPLOYMENTS:-}"
+ENABLE_DAEMONSETS="${KUBE_ENABLE_DAEMONSETS:-}"
+
 # Optional: Install cluster DNS.
 ENABLE_CLUSTER_DNS="${KUBE_ENABLE_CLUSTER_DNS:-true}"
 DNS_SERVER_IP="10.0.0.10"
@@ -101,19 +106,8 @@ if [[ "${ENABLE_NODE_AUTOSCALER}" == "true" ]]; then
   ENABLE_CLUSTER_MONITORING=googleinfluxdb
 fi
 
-# Optional: Enable deployment experimental feature, not ready for production use.
-ENABLE_DEPLOYMENTS="${KUBE_ENABLE_DEPLOYMENTS:-false}"
-if [[ "${ENABLE_DEPLOYMENTS}" == "true" ]]; then
-  ENABLE_EXPERIMENTAL_API=true
-fi
-# Optional: Enable daemonset experimental feature, not ready for production use.
-ENABLE_DAEMONSETS="${KUBE_ENABLE_DAEMONSETS:-false}"
-if [[ "${ENABLE_DAEMONSETS}" == "true" ]]; then
-  ENABLE_EXPERIMENTAL_API=true
-fi
-
 # Admission Controllers to invoke prior to persisting objects in cluster
-ADMISSION_CONTROL=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+ADMISSION_CONTROL=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
 
 # Optional: if set to true kube-up will automatically check for existing resources and clean them up.
 KUBE_UP_AUTOMATIC_CLEANUP=${KUBE_UP_AUTOMATIC_CLEANUP:-false}

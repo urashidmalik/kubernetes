@@ -393,6 +393,7 @@ function create-node-template {
         fi
         echo -e "${color_yellow}Attempt ${attempt} failed to create instance template $template_name. Retrying.${color_norm}" >&2
         attempt=$(($attempt+1))
+        sleep $(($attempt * 5))
     else
         break
     fi
@@ -419,6 +420,7 @@ function add-instance-metadata {
         fi
         echo -e "${color_yellow}Attempt $(($attempt+1)) failed to add metadata in ${instance}. Retrying.${color_norm}" >&2
         attempt=$(($attempt+1))
+        sleep $((5 * $attempt))
     else
         break
     fi
@@ -446,6 +448,7 @@ function add-instance-metadata-from-file {
         fi
         echo -e "${color_yellow}Attempt $(($attempt+1)) failed to add metadata in ${instance}. Retrying.${color_norm}" >&2
         attempt=$(($attempt+1))
+        sleep $(($attempt * 5))
     else
         break
     fi
@@ -713,7 +716,7 @@ function kube-up {
 
   # curl in mavericks is borked.
   secure=""
-  if which sw_vers > /dev/null; then
+  if which sw_vers >& /dev/null; then
     if [[ $(sw_vers | grep ProductVersion | awk '{print $2}') = "10.9."* ]]; then
       secure="--insecure"
     fi
@@ -1231,29 +1234,22 @@ function prepare-e2e() {
 
 # Builds the RUNTIME_CONFIG var from other feature enable options
 function build-runtime-config() {
-  if [[ "${ENABLE_EXPERIMENTAL_API}" == "true" ]]; then
-      if [[ -z "${RUNTIME_CONFIG}" ]]; then
-          RUNTIME_CONFIG="extensions/v1beta1=true"
-      else
-          # TODO: add checking if RUNTIME_CONFIG contains "extensions/v1beta1=false" and appending "extensions/v1beta1=true" if not.
-          if echo "${RUNTIME_CONFIG}" | grep -q -v "extensions/v1beta1=true"; then
-              echo "Experimental API should be turned on, but is not turned on in RUNTIME_CONFIG!" >&2
-              exit 1
-          fi
-      fi
-  fi
   if [[ "${ENABLE_DEPLOYMENTS}" == "true" ]]; then
       if [[ -z "${RUNTIME_CONFIG}" ]]; then
           RUNTIME_CONFIG="extensions/v1beta1/deployments=true"
       else
-          RUNTIME_CONFIG="${RUNTIME_CONFIG},extensions/v1beta1/deployments=true"
+          if echo "${RUNTIME_CONFIG}" | grep -q -v "extensions/v1beta1/deployments=true"; then
+            RUNTIME_CONFIG="${RUNTIME_CONFIG},extensions/v1beta1/deployments=true"
+          fi
       fi
   fi
   if [[ "${ENABLE_DAEMONSETS}" == "true" ]]; then
       if [[ -z "${RUNTIME_CONFIG}" ]]; then
           RUNTIME_CONFIG="extensions/v1beta1/daemonsets=true"
       else
-          RUNTIME_CONFIG="${RUNTIME_CONFIG},extensions/v1beta1/daemonsets=true"
+          if echo "${RUNTIME_CONFIG}" | grep -q -v "extensions/v1beta1/daemonsets=true"; then
+            RUNTIME_CONFIG="${RUNTIME_CONFIG},extensions/v1beta1/daemonsets=true"
+          fi
       fi
   fi
 }
